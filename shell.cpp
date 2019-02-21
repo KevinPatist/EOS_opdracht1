@@ -32,7 +32,29 @@ int main() {
 }
 
 void new_file() {// ToDo: Implementeer volgens specificatie.
-	cout << "ToDo: Implementeer hier new_file()" << endl; 
+//WERKT NOG NIET
+	string fileNameS;
+	string fileContentS;
+	const char *fileName;
+	const char *fileContent;
+	
+	cout << "Geef een filename: " << endl;
+	std::getline(std::cin, fileNameS);
+	fileName = fileNameS.c_str();
+	
+	creat(fileName, O_RDWR);
+	
+	cout << "Geef de file content: " << endl;
+	std::getline(std::cin, fileContentS);
+	fileContent = fileContentS.c_str();
+	
+	char size = fileContentS.size() +1;
+	
+	int fd = syscall(SYS_open, fileNameS, O_RDWR);
+	write(fd, fileContent, size);
+	
+	close(fd);
+	
 }
 
 void list() {
@@ -47,25 +69,26 @@ void list() {
 }
 
 void find() {// ToDo: Implementeer volgens specificatie.
+	//WERKT NOG NIET
 	cout << "Wat wil je zoeken?" << endl;
 	string input;
 	std::getline(std::cin, input);
 	
 	int pipeboy[2];
-	int exit_status;
+	int status;
 	int check;
 
 	check = pipe(pipeboy);
 	
 	if(check == -1) {
-		perror("Alles gaat kapot, alleen je pipe dus");
+		perror("Pipe");
 		exit(1);
 	}
 	
 	
 	int pid = fork();
 	if(pid == 0) {
-		char *args1[] = {(char*) "/usr/bin/find", (char*) "./", (char*) 0};
+		char *args1[] = {(char*) "find", (char*) ".", (char*) 0};
 		close(pipeboy[0]);
 		dup2(pipeboy[1], STDOUT_FILENO);
 		execv("/usr/bin/find", args1);
@@ -73,20 +96,20 @@ void find() {// ToDo: Implementeer volgens specificatie.
 	
 	pid = fork();
 	if(pid == 0) {
-		char *args2[] = {(char*) "/usr/bin/grep", (char*) input.c_str(), (char*) 0};
+		char *parm[] = {(char*) "grep", (char*) input.c_str(), (char*) 0};
 		close(pipeboy[1]);
 		dup2(pipeboy[0], STDIN_FILENO);
-		execv("/usr/bin/grep", args2);
+		execv("/usr/bin/grep", parm);
 	}
 	
 	close(pipeboy[0]);
 	close(pipeboy[1]);
 	
-	wait(&exit_status);
-	wait(&exit_status);
+	waitpid(-1, &status, 0);
+	waitpid(-1, &status, 0);
 }
 
-void python() {// ToDo: Implementeer volgens specificatie.
+void python() {
 	int pid = fork();
 	if(pid == 0) {
 		char *args[] = {(char *) "/usr/bin/python", (char*) 0};
