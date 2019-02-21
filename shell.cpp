@@ -47,11 +47,54 @@ void list() {
 }
 
 void find() {// ToDo: Implementeer volgens specificatie.
-	cout << "ToDo: Implementeer hier find()" << endl; 
+	cout << "Wat wil je zoeken?" << endl;
+	string input;
+	std::getline(std::cin, input);
+	
+	int pipeboy[2];
+	int exit_status;
+	int check;
+
+	check = pipe(pipeboy);
+	
+	if(check == -1) {
+		perror("Alles gaat kapot, alleen je pipe dus");
+		exit(1);
+	}
+	
+	
+	int pid = fork();
+	if(pid == 0) {
+		char *args1[] = {(char*) "/usr/bin/find", (char*) "./", (char*) 0};
+		close(pipeboy[0]);
+		dup2(pipeboy[1], STDOUT_FILENO);
+		execv("/usr/bin/find", args1);
+	}
+	
+	pid = fork();
+	if(pid == 0) {
+		char *args2[] = {(char*) "/usr/bin/grep", (char*) input.c_str(), (char*) 0};
+		close(pipeboy[1]);
+		dup2(pipeboy[0], STDIN_FILENO);
+		execv("/usr/bin/grep", args2);
+	}
+	
+	close(pipeboy[0]);
+	close(pipeboy[1]);
+	
+	wait(&exit_status);
+	wait(&exit_status);
 }
 
 void python() {// ToDo: Implementeer volgens specificatie.
-	cout << "ToDo: Implementeer hier python()" << endl; 
+	int pid = fork();
+	if(pid == 0) {
+		char *args[] = {(char *) "/usr/bin/python", (char*) 0};
+		execv("/usr/bin/python", args);
+	} else {
+		int exit_status;
+		wait(&exit_status);
+	}
 }
 
 void src() {// Voorbeeld: Gebruikt SYS_open en SYS_read om de source van de shell (shell.cc) te printen.
