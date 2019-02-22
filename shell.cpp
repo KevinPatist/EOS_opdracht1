@@ -15,10 +15,13 @@ using std::endl;
 int main() { 
 	string input;
 	string prompt;
-	
+	char promptC[5];
+	int fd = syscall(SYS_open, "config.txt", O_RDONLY, 0755);                 
+	while(syscall(SYS_read, fd, promptC, 5))
+	prompt = promptC;
 	
 	while(true) { 
-		cout << "--$";                   // Print het prompt
+		cout << prompt;                   // Print het prompt
 		std::getline(std::cin, input);         // Lees een regel
 		if (input == "new_file") new_file();   // Kies de functie
 		else if (input == "ls") list();        //   op basis van
