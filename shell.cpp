@@ -1,5 +1,12 @@
 #include "shell.hh"
 #include <sys/wait.h>
+#include <iostream>
+#include <unistd.h>  // syscall()
+#include <sys/syscall.h> // SysCall nummers
+#include <fcntl.h>   // O_RDONLY
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 using std::string;
 using std::cout;
@@ -8,13 +15,10 @@ using std::endl;
 int main() { 
 	string input;
 	string prompt;
-	char promptC[15];
-	int fd = syscall(SYS_open, "config.txt", O_RDONLY, 0755);
-	while(syscall(SYS_read, fd, promptC, 15))
-	prompt = promptC;
+	
 	
 	while(true) { 
-		cout << prompt;                   // Print het prompt
+		cout << "--$";                   // Print het prompt
 		std::getline(std::cin, input);         // Lees een regel
 		if (input == "new_file") new_file();   // Kies de functie
 		else if (input == "ls") list();        //   op basis van
@@ -32,25 +36,27 @@ int main() {
 }
 
 void new_file() {// ToDo: Implementeer volgens specificatie.
-//WERKT NOG NIET
+//MOET NOG ZORGEN DAT EOF ALS EINDE WERKT
 	string fileNameS;
 	string fileContentS;
 	const char *fileName;
 	const char *fileContent;
 	
 	cout << "Geef een filename: " << endl;
+		
 	std::getline(std::cin, fileNameS);
+	fileNameS += ".txt";
 	fileName = fileNameS.c_str();
 	
-	creat(fileName, O_RDWR);
+	int fd = creat(fileName, 0777);
 	
 	cout << "Geef de file content: " << endl;
 	std::getline(std::cin, fileContentS);
 	fileContent = fileContentS.c_str();
 	
-	char size = fileContentS.size() +1;
+	char size = fileContentS.length();
 	
-	int fd = syscall(SYS_open, fileNameS, O_RDWR);
+	//int fd = syscall(SYS_open, fileNameS, O_RDWR);
 	write(fd, fileContent, size);
 	
 	close(fd);
@@ -68,8 +74,7 @@ void list() {
 	}
 }
 
-void find() {// ToDo: Implementeer volgens specificatie.
-	//WERKT NOG NIET
+void find() {
 	cout << "Wat wil je zoeken?" << endl;
 	string input;
 	std::getline(std::cin, input);
@@ -86,9 +91,9 @@ void find() {// ToDo: Implementeer volgens specificatie.
 	}
 	
 	
-	int pid = fork();
+	pid_t pid = fork();
 	if(pid == 0) {
-		char *args1[] = {(char*) "find", (char*) ".", (char*) 0};
+		char *args1[] = {(char*) "find", (char*) "./", (char*) NULL};
 		close(pipeboy[0]);
 		dup2(pipeboy[1], STDOUT_FILENO);
 		execv("/usr/bin/find", args1);
@@ -96,10 +101,10 @@ void find() {// ToDo: Implementeer volgens specificatie.
 	
 	pid = fork();
 	if(pid == 0) {
-		char *parm[] = {(char*) "grep", (char*) input.c_str(), (char*) 0};
+		char *parm[] = {(char*) "grep", (char*) input.c_str(), (char*) NULL};
 		close(pipeboy[1]);
 		dup2(pipeboy[0], STDIN_FILENO);
-		execv("/usr/bin/grep", parm);
+		execv("/bin/grep", parm);
 	}
 	
 	close(pipeboy[0]);

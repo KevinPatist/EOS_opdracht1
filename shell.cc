@@ -36,7 +36,7 @@ int main() {
 }
 
 void new_file() {// ToDo: Implementeer volgens specificatie.
-//WERKT NOG NIET
+//MOET NOG ZORGEN DAT EOF ALS EINDE WERKT
 	string fileNameS;
 	string fileContentS;
 	const char *fileName;
@@ -74,8 +74,7 @@ void list() {
 	}
 }
 
-void find() {// ToDo: Implementeer volgens specificatie.
-	//WERKT NOG NIET
+void find() {
 	cout << "Wat wil je zoeken?" << endl;
 	string input;
 	std::getline(std::cin, input);
