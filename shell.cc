@@ -16,9 +16,10 @@ int main() {
 	string input;
 	string prompt;
 	char promptC[5];
-	int fd = syscall(SYS_open, "config.txt", O_RDONLY, 0755);                 
-	while(syscall(SYS_read, fd, promptC, 5))
+	int fd = syscall(SYS_open, "config.txt", O_RDONLY, 0755);      //HIER IS DE SYSCALL           
+	while(syscall(SYS_read, fd, promptC, 5))  								//HIER IS DE SYSCALL
 	prompt = promptC;
+	syscall(SYS_close, fd);
 	
 	while(true) { 
 		cout << prompt;                   // Print het prompt
@@ -39,11 +40,9 @@ int main() {
 }
 
 void new_file() {// ToDo: Implementeer volgens specificatie.
-//MOET NOG ZORGEN DAT EOF ALS EINDE WERKT
 	string fileNameS;
 	string fileContentS;
 	const char *fileName;
-	const char *fileContent;
 	
 	cout << "Geef een filename: " << endl;
 		
@@ -51,16 +50,20 @@ void new_file() {// ToDo: Implementeer volgens specificatie.
 	fileNameS += ".txt";
 	fileName = fileNameS.c_str();
 	
-	int fd = creat(fileName, 0777);
+	int fd = syscall(SYS_creat, fileName, 0777);      //NOG MEER SYSCALL
+	string enddefinition = "<EOF>";
 	
 	cout << "Geef de file content: " << endl;
-	std::getline(std::cin, fileContentS);
-	fileContent = fileContentS.c_str();
-	
-	char size = fileContentS.length();
-	
-	//int fd = syscall(SYS_open, fileNameS, O_RDWR);
-	write(fd, fileContent, size);
+	while (std::getline(std::cin, fileContentS)) {  //user kan een string opgeven die in textfile geschreven wordt
+        std::size_t found = fileContentS.find(enddefinition); //zoekt uit of en op welke index <EOF> zich bevindt.
+        if (found != std::string::npos) {
+            write(fd, fileContentS.c_str(), (fileContentS.size() - enddefinition.size()));        //write functie schrijft de gegeven tekst weg naar fd
+            write(fd, "\n", 1);         //voegt een "enter" toe aan het einde van de file.
+            break;
+        }
+        write(fd, fileContentS.c_str(), fileContentS.size());     //write functie schrijft de gegeven tekst weg naar fd
+        write(fd, "\n", 1);        // voegt een "enter" toe na elke nieuwe regel
+    }
 	
 	close(fd);
 	
